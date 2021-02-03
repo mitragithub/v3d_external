@@ -284,6 +284,17 @@ MainWindow::~MainWindow()
 }
 void MainWindow::closeEvent(QCloseEvent *event)
 {
+    /*
+    switch (QMessageBox::information(this,tr("warning"),tr("Do you want to exit?"),tr("yes"),tr("no"),0,1)) {
+    case 0:
+        break;
+    case 1:
+        event->ignore();
+        return;
+        break;
+    } //by XZ, 20190725
+    */
+
     //if (workspace)  workspace->deleteLater(); //110802 RZC //will call ~XFormView to raise BAD_ACCESS
     disconnect(workspace, SIGNAL(windowActivated(QWidget *)),  this, SLOT(updateMenus())); //instead of above line
     V3dApplication::handleCloseEvent(event);
@@ -857,7 +868,7 @@ void MainWindow::loadV3DFile(QString fileName, bool b_putinrecentfilelist, bool 
                             {
                                 child_rawimg->getImageData()->flip(axis_y);
                             }
-                            if ((b_forceopen3dviewer || (global_setting.b_autoOpenImg3DViewer))&& cc.pointcloud_file_list.size()<=00 && cc.swc_file_list.size()<=0 && cc.surface_file_list.size()<=0)
+                            if ((b_forceopen3dviewer || (global_setting.b_autoOpenImg3DViewer))&& cc.pointcloud_file_list.size()<=0 && cc.swc_file_list.size()<=0 && cc.surface_file_list.size()<=0)
                             {
                                 child_rawimg->doImage3DView();
                             }

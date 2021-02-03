@@ -15,9 +15,9 @@
 
  2. You agree to appropriately cite this work in your related studies and publications.
 
- Peng, H., Ruan, Z., Long, F., Simpson, J.H., and Myers, E.W. (2010) “V3D enables real-time 3D visualization and quantitative analysis of large-scale biological image data sets,” Nature Biotechnology, Vol. 28, No. 4, pp. 348-353, DOI: 10.1038/nbt.1612. ( http://penglab.janelia.org/papersall/docpdf/2010_NBT_V3D.pdf )
+ Peng, H., Ruan, Z., Long, F., Simpson, J.H., and Myers, E.W. (2010) V3D enables real-time 3D visualization and quantitative analysis of large-scale biological image data sets,鈥� Nature Biotechnology, Vol. 28, No. 4, pp. 348-353, DOI: 10.1038/nbt.1612. ( http://penglab.janelia.org/papersall/docpdf/2010_NBT_V3D.pdf )
 
- Peng, H, Ruan, Z., Atasoy, D., and Sternson, S. (2010) “Automatic reconstruction of 3D neuron structures using a graph-augmented deformable model,” Bioinformatics, Vol. 26, pp. i38-i46, 2010. ( http://penglab.janelia.org/papersall/docpdf/2010_Bioinfo_GD_ISMB2010.pdf )
+ Peng, H, Ruan, Z., Atasoy, D., and Sternson, S. (2010) Automatic reconstruction of 3D neuron structures using a graph-augmented deformable model, Bioinformatics, Vol. 26, pp. i38-i46, 2010. ( http://penglab.janelia.org/papersall/docpdf/2010_Bioinfo_GD_ISMB2010.pdf )
 
  3. This software is provided by the copyright holders (Hanchuan Peng), Howard Hughes Medical Institute, Janelia Farm Research Campus, and contributors "as is" and any express or implied warranties, including, but not limited to, any implied warranties of merchantability, non-infringement, or fitness for a particular purpose are disclaimed. In no event shall the copyright owner, Howard Hughes Medical Institute, Janelia Farm Research Campus, or contributors be liable for any direct, indirect, incidental, special, exemplary, or consequential damages (including, but not limited to, procurement of substitute goods or services; loss of use, data, or profits; reasonable royalties; or business interruption) however caused and on any theory of liability, whether in contract, strict liability, or tort (including negligence or otherwise) arising in any way out of the use of this software, even if advised of the possibility of such damage.
 
@@ -54,7 +54,8 @@
  *
  */
 
-#include "renderer_gl1.h"
+//#include "renderer_gl1.h"
+#include "renderer_gl2.h"
 #include "v3dr_glwidget.h"
 #include "barFigureDialog.h"
 #include "v3d_application.h"
@@ -91,14 +92,8 @@
 #include "line_box_intersection_check.h"
 
 #include "../terafly/src/control/CPlugin.h"
+#include "../terafly/src/presentation/PMain.h"
 
-// ------- Conditional inclusion for fragment tracing, MK, Mar, 2019 -------
-//#include "../v3d/CustomDefine.h"
-//#ifdef _FRAGTRACE_
-//#include "NeuronStructExplorer.h"
-//#include "NeuronStructUtilities.h"
-//#endif
-// -------------------------------------------------------------------------
 #ifdef _WIN32
     #include <windows.h>
 
@@ -1296,7 +1291,7 @@ void Renderer_gl1::adaptiveCurveResamplingRamerDouglasPeucker(vector <XYZ> &loc_
 
 void Renderer_gl1::recursiveRamerDouglasPeucker(vector <XYZ> &loc_vec, vector <XYZ> &loc_vec_resampled, int start_i, int end_i, float epsilon)
 {
-     // Recursive Ramer–Douglas–Peucker algorithm
+     // Recursive Ramer鈥揇ouglas鈥揚eucker algorithm
      loc_vec_resampled.clear();
      XYZ & loc_start = loc_vec.at(start_i);
      XYZ & loc_final = loc_vec.at(end_i);
@@ -2054,7 +2049,7 @@ if (0)
 //                    qDebug()<<"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"<<endl;
 
 
-                double th_merge = 5*th_times;
+                double th_merge = 5;//*th_times;
 
                 bool b_start_merged=false, b_end_merged=false;
                 NeuronSWC cur_node;
@@ -3491,6 +3486,76 @@ void Renderer_gl1::deleteMultiNeuronsByStroke()
 			curImg->tracedNeuron.seg[s].to_be_deleted = curImg->tracedNeuron.seg[s].to_be_deleted && !allUnitsOutsideZCut;
 		}
 	}
+
+    vector <XYZ> specialmarkerloc;
+    vector <V3DLONG> specialmarkerslocindex;
+    QList <LocationSimple> &listloc = curImg->listLandmarks;
+    for(V3DLONG i=0; i<listloc.size(); ++i)
+    {
+        if(listloc[i].category==77)
+        {
+            XYZ tmp(listloc[i].x,listloc[i].y,listloc[i].z);
+            specialmarkerloc.push_back(tmp);
+            specialmarkerslocindex.push_back(i);
+        }
+    }
+    V3DLONG specialmarkersegindex = -1;
+    V3DLONG specialmarkerlocindex = -1;
+    for(V3DLONG i=0; i<nsegs; ++i)
+    {
+        V_NeuronSWC this_seg = curImg->tracedNeuron.seg.at(i);
+        const V3DLONG nrows = this_seg.row.size();
+        if(curImg->tracedNeuron.seg[i].to_be_deleted==true)
+        {
+            XYZ segloclast(this_seg.row.at(nrows-1).x+1,this_seg.row.at(nrows-1).y+1,this_seg.row.at(nrows-1).z+1);
+            for(V3DLONG j=0; j<specialmarkerloc.size(); ++j)
+            {
+                if(segloclast==specialmarkerloc.at(j))
+                {
+                    specialmarkerlocindex = specialmarkerslocindex.at(j);
+                    specialmarkersegindex = i;
+                    break;
+                }
+
+            }
+        }
+        if(specialmarkersegindex!=-1)
+            break;
+    }
+    if(specialmarkerlocindex!=-1 && specialmarkersegindex!=-1)
+    {
+        QList <LocationSimple> ::iterator it = listloc.begin();
+        listloc.erase(it+specialmarkerlocindex);
+        bool islastseg = false;
+        while(!islastseg)
+        {
+            bool changed = false;
+            for(V3DLONG i=0; i<nsegs; ++i)
+            {
+                if(curImg->tracedNeuron.seg[i].to_be_deleted==true && i!=specialmarkersegindex)
+                {
+                    XYZ parent(curImg->tracedNeuron.seg[i].row.back().x,curImg->tracedNeuron.seg[i].row.back().y,curImg->tracedNeuron.seg[i].row.back().z);
+                    XYZ child(curImg->tracedNeuron.seg[specialmarkersegindex].row.front().x,curImg->tracedNeuron.seg[specialmarkersegindex].row.front().y,curImg->tracedNeuron.seg[specialmarkersegindex].row.front().z);
+                    if(parent==child)
+                    {
+                        changed = true;
+                        specialmarkersegindex = i;
+                    }
+                }
+            }
+            if(!changed)
+            {
+                islastseg = true;
+            }
+            changed = false;
+        }
+    }
+    if(specialmarkerlocindex!=-1 && specialmarkersegindex!=-1)
+    {
+        XYZ markerloc(curImg->tracedNeuron.seg[specialmarkersegindex].row.front().x,curImg->tracedNeuron.seg[specialmarkersegindex].row.front().y,curImg->tracedNeuron.seg[specialmarkersegindex].row.front().z);
+        addSpecialMarker(markerloc);
+    } // by XZ, 20190726
+
     curImg->update_3drenderer_neuron_view(w, this);
     curImg->proj_trace_history_append();
 }
@@ -4362,10 +4427,7 @@ void Renderer_gl1::showConnectedSegs()
                 cout << *segIt << " "<<curImg->tracedNeuron.seg[*segIt].row.size()<<endl;
 				for (vector<V_NeuronSWC_unit>::iterator unitIt = curImg->tracedNeuron.seg[*segIt].row.begin(); unitIt != curImg->tracedNeuron.seg[*segIt].row.end(); ++unitIt)
                     unitIt->type = color_code;
-//                color_code++;
-				this->highlightedSegMap.insert(pair<size_t, vector<V_NeuronSWC_unit> >(*segIt, curImg->tracedNeuron.seg[*segIt].row));
-//                boost::this_thread::sleep_for(boost::chrono::milliseconds(500));
-//                my_sleep(500);
+				this->highlightedSegMap.insert(pair<size_t, vector<V_NeuronSWC_unit> >(*segIt, curImg->tracedNeuron.seg[*segIt].row));             
             }
 			//cout << endl;
 			/* ----------------- END of [Start finding connected segments] ----------------- */
@@ -6562,11 +6624,12 @@ void Renderer_gl1::retypeMultiNeuronsByStroke()
                     {
                         if(   (poly.boundingRect().contains(p) && pointInPolygon(p.x(), p.y(), poly)) && !allUnitsOutsideZCut)
                         {
-                            if(neuronColorMode==0)
-                                change_type_in_seg_of_V_NeuronSWC_list(curImg->tracedNeuron, p_listneuron->at(i).seg_id, node_type);
-                            else
+							if (neuronColorMode == 0)
+							{
+								change_type_in_seg_of_V_NeuronSWC_list(curImg->tracedNeuron, p_listneuron->at(i).seg_id, node_type);
+							}
+							else
                                 change_level_in_seg_of_V_NeuronSWC_list(curImg->tracedNeuron, p_listneuron->at(i).seg_id, node_level);
-
                         }
                     }
                     else
@@ -6606,7 +6669,6 @@ void Renderer_gl1::retypeMultiNeuronsByStroke()
                                     }
                                     else
                                         change_type_in_seg_of_V_NeuronSWC_list(curImg->tracedNeuron, p_listneuron->at(i).seg_id, node_type);
-
                                 }
                                 else
                                 {

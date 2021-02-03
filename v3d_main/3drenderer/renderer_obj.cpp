@@ -25,9 +25,14 @@ Peng, H, Ruan, Z., Atasoy, D., and Sternson, S. (2010) Automatic reconstruction 
  * Last update: 120209: by Yinan Wan, add matlab heat map to neuron_type_color list, it starts from type 19
  * Last update: 150506: by PHC. add asc reading support
  */
+
+#include "GLee2glew.h" ////2020-2-10
+
 #include "renderer_gl1.h"
 #include "v3dr_glwidget.h"
 #include "freeglut_geometry_r.c"
+
+#include "../terafly/src/presentation/PMain.h"
 
 #include "../io/asc_to_swc.h"
 //#include "../io/sswc_to_swc.h"
@@ -341,9 +346,9 @@ const GLubyte neuron_type_color[ ][3] = {///////////////////////////////////////
 		{0,   200, 200},  // cyan,    5
 		{220, 200, 0  },  // yellow,  6
 		{0,   200, 20 },  // green,   7
-		{188, 94,  37 },  // coffee,  8
+        {250, 100, 120},  // coffee,  8 change to 10
 		{180, 200, 120},  // asparagus,	9
-		{250, 100, 120},  // salmon,	10
+        {188, 94,  37 },  // salmon,	10  change to 8
 		{120, 200, 200},  // ice,		11
 		{100, 120, 200},  // orchid,	12
     //the following is Hanchuan's further extended color. 111003
@@ -1430,6 +1435,8 @@ void Renderer_gl1::drawCellList()
 {
 	//qDebug("    Renderer_gl1::drawCellList");
 	if (sShowSurfObjects==0) return;
+	float maxD = boundingBox.Dmax();
+	float marker_size = maxD * markerSize / 1000.f;
 	for (int pass=0; pass<numPassFloatDraw(sShowSurfObjects); pass++)
 	{
 		setFloatDrawOp(pass, sShowSurfObjects);
@@ -1441,10 +1448,14 @@ void Renderer_gl1::drawCellList()
 			float sh = S.intensity/2.0;  //default OpenGL does not permit a shininess or spot exponent over 128
 			XYZW ms = S.intensity/255.0;
 			//RGBA8 color = XYZW(S.color)*ms;  // 081213
-			float d = 2.0*pow(S.volsize/3.1415926*0.75, 1/3.0);
+			float d = 2.0*pow(S.volsize/3.1415926*0.75, 1/3.0);		
 			glPushMatrix();
 			glTranslatef(S.x, S.y, S.z);
+#ifdef _YUN_
+			glScalef(marker_size, marker_size, marker_size);
+#else
 			glScalef(d, d, d);
+#endif
 			glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, sh);
 			glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, ms.v);
 			//glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, (1/4.0 *ma).v); // 081206, change EMISSION to AMBIENT
@@ -1947,6 +1958,7 @@ void Renderer_gl1::setEditMode()
 {
     V3dR_GLWidget* w = (V3dR_GLWidget*)widget;
     My4DImage* curImg = 0;       if (w) curImg = v3dr_getImage4d(_idep);
+
     if(listNeuronTree.size()>=1 && w && curImg)
     {
         if(listNeuronTree.at(0).editable==true || listNeuronTree.at(listNeuronTree.size()-1).editable==true)

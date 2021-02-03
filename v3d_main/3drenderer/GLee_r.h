@@ -71,7 +71,7 @@ Peng, H, Ruan, Z., Atasoy, D., and Sternson, S. (2010) “Automatic reconstructi
 #ifndef __glee_h_
 #define __glee_h_
 
-#ifdef __PHC_TEST_QT5_15May_
+//#ifdef __PHC_TEST_QT5_15May_
 
 #ifdef __gl_h_
 	#error gl.h included before glee.h
@@ -89,9 +89,9 @@ Peng, H, Ruan, Z., Atasoy, D., and Sternson, S. (2010) “Automatic reconstructi
 	#error glxext.h included before glee.h
 #endif
 
-#endif
+//#endif
 
-#include "../v3d/version_control.h"
+//#include "../v3d/version_control.h"
 
 //yuy added _WIN6, 2010-05-19
 // #ifdef _WIN32 || _WIN64
@@ -100,11 +100,11 @@ Peng, H, Ruan, Z., Atasoy, D., and Sternson, S. (2010) “Automatic reconstructi
 	#define WIN32_LEAN_AND_MEAN
 	#define NOMINMAX //added by PHC, 2010-05-20 to overcome VC min max macro
 	#include <windows.h>
-	#if defined(USE_Qt5)
-		#include <GL\glew.h>
-	#else
+	//#if defined(USE_Qt5)
+	//	#include <GL\glew.h>
+	//#else
 		#include <GL/gl.h>
-	#endif
+	//#endif
 #elif defined(__APPLE__) || defined(__APPLE_CC__) || defined(__DARWIN__)
 	#include <OpenGL/gl.h>
 #else // GLX

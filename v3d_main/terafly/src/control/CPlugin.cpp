@@ -25,6 +25,7 @@
 *    4. Neither the name of University  Campus Bio-Medico of Rome, nor Alessandro Bria and Giulio Iannello, may be used to endorse or  promote products  derived from this software without
 *       specific prior written permission.
 ********************************************************************************************************************************************************************************************/
+#include "renderer_gl1.h"
 
 #include <QErrorMessage>
 #include "v3d_interface.h"
@@ -542,78 +543,16 @@ bool tf::PluginInterface::setImage(size_t x, size_t y, size_t z)
 }
 
 
-// ------------------------------------ Fragment-based Tracing Related ------------------------------------ //
-//--------------------------------------------------------------------------- MK, Mar, 2019 --------------- //
-bool tf::PluginInterface::teraflyImgInstance()
-{
-	if (!CImport::instance()->isEmpty()) return true;
-	else return false;
-}
-
-void tf::PluginInterface::drawEditInfo(int editNum)
-{
-	CViewer::getCurrent()->getGLWidget()->renderer->editinput = editNum;
-	CViewer::getCurrent()->getGLWidget()->renderer->drawEditInfo();
-}
-
-bool tf::PluginInterface::checkFragTraceStatus()
-{
-	Renderer_gl1* thisRenderer = static_cast<Renderer_gl1*>(CViewer::getCurrent()->getGLWidget()->getRenderer());
-	return thisRenderer->fragmentTrace;
-}
-
-void tf::PluginInterface::changeFragTraceStatus(bool newStatus)
-{
-	Renderer_gl1* thisRenderer = static_cast<Renderer_gl1*>(CViewer::getCurrent()->getGLWidget()->getRenderer());
-	thisRenderer->fragmentTrace = newStatus;
-}
-
-void tf::PluginInterface::changeUIstatus(bool newStatus)
-{
-	Renderer_gl1* thisRenderer = static_cast<Renderer_gl1*>(CViewer::getCurrent()->getGLWidget()->getRenderer());
-	thisRenderer->UIinstance = newStatus;
-}
-
-void tf::PluginInterface::getParamsFromFragTraceUI(const string& keyName, const float& value)
-{
-	Renderer_gl1* thisRenderer = static_cast<Renderer_gl1*>(CViewer::getCurrent()->getGLWidget()->getRenderer());
-	thisRenderer->fragTraceParams.insert(pair<string, float>(keyName, value));
-}
-
-bool tf::PluginInterface::getPartialVolumeCoords(int globalCoords[], int localCoords[], int displayingVolDims[])
+/* ======================================================================================================
+ * This method is called by [v3dr_glwidget] when [Alt + F] is hit, 
+ * which casts CViewer to INeuronAssembler in order to allow Neuron Assembler talking to terafly directly.
+ * ========================================================================== MK, Dec, 2019 ============= */
+#ifdef _NEURON_ASSEMBLER_
+INeuronAssembler* tf::PluginInterface::getTeraflyCViewer()
 {
 	terafly::CViewer* currViewerPtr = terafly::CViewer::getCurrent();
-	
-	if (!currViewerPtr->volumeCutSbAdjusted) return false;
-	displayingVolDims[0] = currViewerPtr->getXDim();
-	displayingVolDims[1] = currViewerPtr->getYDim();
-	displayingVolDims[2] = currViewerPtr->getZDim();
-
-	globalCoords[0] = PDialogProofreading::instance()->xCoordl;
-	globalCoords[1] = PDialogProofreading::instance()->xCoordh;
-	globalCoords[2] = PDialogProofreading::instance()->yCoordl;
-	globalCoords[3] = PDialogProofreading::instance()->yCoordh;
-	globalCoords[4] = PDialogProofreading::instance()->zCoordl;
-	globalCoords[5] = PDialogProofreading::instance()->zCoordh;
-
-	if (currViewerPtr->xMinAdjusted) localCoords[0] = PDialogProofreading::instance()->sbXlb;
-	else localCoords[0] = 1;
-	if (currViewerPtr->xMaxAdjusted) localCoords[1] = PDialogProofreading::instance()->sbXhb;
-	else localCoords[1] = displayingVolDims[0];
-	if (currViewerPtr->yMinAdjusted) localCoords[2] = PDialogProofreading::instance()->sbYlb;
-	else localCoords[2] = 1;
-	if (currViewerPtr->yMaxAdjusted) localCoords[3] = PDialogProofreading::instance()->sbYhb;
-	else localCoords[3] = displayingVolDims[1];
-	if (currViewerPtr->zMinAdjusted) localCoords[4] = PDialogProofreading::instance()->sbZlb;
-	else localCoords[4] = 1;
-	if (currViewerPtr->zMaxAdjusted) localCoords[5] = PDialogProofreading::instance()->sbZhb;
-	else localCoords[5] = displayingVolDims[2];
-	
-	//cout << "  Image block dimensions: " << displayingVolDims[0] << " " << displayingVolDims[1] << " " << displayingVolDims[2] << endl;
-
-	if (localCoords[1] - localCoords[0] + 1 == displayingVolDims[0] &&
-		localCoords[3] - localCoords[2] + 1 == displayingVolDims[1] &&
-		localCoords[5] - localCoords[4] + 1 == displayingVolDims[2]) return false;
-	else return true;
+	INeuronAssembler* interfacePtr = qobject_cast<terafly::CViewer*>(currViewerPtr);
+	return interfacePtr;
 }
+#endif
 // -------------------------------------------------------------------------------------------------------- //

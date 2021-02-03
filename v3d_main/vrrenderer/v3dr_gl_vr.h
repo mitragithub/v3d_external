@@ -3,30 +3,25 @@
 #ifndef __V3DR_GL_VR_H__
 #define __V3DR_GL_VR_H__
 
+#include <glew/GL/glew.h>
 #include <SDL.h>
 
-#include "../basic_c_fun/v3d_interface.h"
-
+//#include "../basic_c_fun/v3d_interface.h"
 
 #include <openvr.h>
 #include "lodepng.h"
 
 #include "Matrices.h"//todo-yimin: this header is removable
-#include <GL/glew.h>
+////#include <GL/glew.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-
+#include "V3dR_Communicator.h"
 //#include <gltext.hpp>//include freetype and gltest library
 
 #include "mainwindow.h"
 
-struct Agent {
-	QString name;
-	bool isItSelf;
-	int colorType;
-	float position[16];
-};
+#include "../basic_c_fun/v3d_interface.h"
 
 
 enum ModelControlR
@@ -244,6 +239,7 @@ public:
 	void SetupRenderModelForTrackedDevice( vr::TrackedDeviceIndex_t unTrackedDeviceIndex );
 	CGLRenderModel *FindOrLoadRenderModel( const char *pchRenderModelName );
 
+	float GetGlobalScale();
 public:
 
 	MainWindow *mainwindow;
@@ -289,8 +285,9 @@ private:
 	NeuronTree loadedNT_merged; // merged result of loadedNTList
 	
 	QList<NeuronTree> sketchedNTList; //neuron trees drawn in the VR view.	
+	public:
 	NeuronTree currentNT;// currently drawn stroke of neuron
-	
+	private:
 	NeuronTree tempNT;//used somewhere, can be change to a local variable
 	BoundingBox swcBB;
 	QList<ImageMarker> drawnMarkerList;

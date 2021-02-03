@@ -1,12 +1,14 @@
 #ifndef V3DSUBCLASSES_H
 #define V3DSUBCLASSES_H
 
-#include "CPlugin.h"
-#include "renderer_gl1.h"
+
+//#include "renderer_gl1.h"
 #include "renderer_gl2.h"
 #include "v3dr_glwidget.h"
 #include "v3dr_mainwindow.h"
 #include "v3d_imaging_para.h"
+
+#include "CPlugin.h"
 
 /**********************************************************************************
 * Vaa3D subclasses needed to access/override protected members/methods
@@ -58,6 +60,11 @@ class terafly::myV3dR_GLWidget : public V3dR_GLWidget
         //@Override
         void setZoomO(int zr);
         void setZoomO(float zr);
+
+#ifdef _NEURON_ASSEMBLER_
+		void setZoom_NAeraserSize(float zr);
+		void setZoom_NAconnectorSize(float zr);
+#endif
 };
 
 class terafly::myV3dR_MainWindow : public V3dR_MainWindow

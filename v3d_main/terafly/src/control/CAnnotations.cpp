@@ -1,3 +1,5 @@
+#include "renderer_gl1.h"
+//#include "renderer.h"
 #include <algorithm>
 #include <vector>
 #include <list>
@@ -14,8 +16,9 @@
 #include "COperation.h"
 #include "CImageUtils.h"
 #include "../presentation/PLog.h"
-#include "renderer_gl1.h"
-#include "renderer.h"
+//#include "renderer_gl1.h"
+//#include "renderer.h"
+#include "../../../../3drenderer/v3dr_surfaceDialog.h"
 
 double SOMA_X = -1.1;
 double SOMA_Y = -1.1;
@@ -50,7 +53,7 @@ annotation::annotation() throw (tf::RuntimeException){
     smart_delete = true;
 
     // assign first usable ID
-    if(last_ID == std::numeric_limits<long long>::max())
+    if(last_ID == (std::numeric_limits<long long>::max)())
         throw tf::RuntimeException("Reached the maximum number of annotation instances. Please signal this issue to the developer");
     ID = ++last_ID;
 
@@ -2028,6 +2031,33 @@ void CAnnotations::save(const char* filepath, bool removedupnode, bool as_swc) t
         fprintf(f, "SWCFILE=%s\n", qPrintable(output_swc));
         fclose(f);
     }
+
+#ifdef _YUN_
+	//if (V3dR_GLWidget::surfaceDlg) cout << V3dR_GLWidget::surfaceDlg->getMarkerNum() << endl;
+	myRenderer_gl1* thisRenderer = myRenderer_gl1::cast(static_cast<Renderer_gl1*>(CViewer::getCurrent()->view3DWidget->getRenderer()));
+	for (QList<ImageMarker>::iterator it = thisRenderer->listMarker.begin(); it != thisRenderer->listMarker.end(); ++it)
+	{
+		ImageMarker currMarker;
+		float convertedX = CViewer::getCurrent()->coord2global<float>(it->x, iim::horizontal, false, -1, false, false, __itm__current__function__);
+		float convertedY = CViewer::getCurrent()->coord2global<float>(it->y, iim::vertical, false, -1, false, false, __itm__current__function__);
+		float convertedZ = CViewer::getCurrent()->coord2global<float>(it->z, iim::depth, false, -1, false, false, __itm__current__function__);
+		std::list<annotation*>* annoPtrList = octree->find(convertedX, convertedY, convertedZ);
+		if (annoPtrList != nullptr)
+		{
+			if (annoPtrList->size() == 1) annoPtrList->front()->name = it->name.toStdString();
+			else
+			{
+				if (it->name == "duplicated") continue;
+				else
+				{
+					for (std::list<annotation*>::iterator annoIt = annoPtrList->begin(); annoIt != annoPtrList->end(); ++annoIt)
+						(*annoIt)->name = "duplicated";
+					annoPtrList->front()->name = it->name.toStdString();
+				}
+			}
+		}
+	}
+#endif
 
     //saving apo (point cloud) file
     QList<CellAPO> points;

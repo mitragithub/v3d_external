@@ -160,7 +160,7 @@ void main()
     if(colorAcum.b>1) colorAcum.b =1;
 
 	//brightness supression
-	if (ImageSettings.y < 0.5) // temporarily use ImageSettings.y for this
+	if (ImageSettings.y < -0.9) // temporarily use ImageSettings.y for this
 	{
 		if(colorAcum.r>0.4) colorAcum.r = 0.4;
 		//else if(colorAcum.r>0.2) colorAcum.r *= 1.5;
@@ -169,6 +169,20 @@ void main()
 		if(colorAcum.b>0.4) colorAcum.b = 0.4;
 		//else if(colorAcum.b>0.2) colorAcum.b *= 1.5;
 	}
+	else   //brightness set
+	{
+		colorAcum.r += ImageSettings.y;
+		colorAcum.g += ImageSettings.y;
+		colorAcum.b += ImageSettings.y;
+	}
+	if(colorAcum.r<0) colorAcum.r =0;
+    if(colorAcum.g<0) colorAcum.g =0;
+    if(colorAcum.b<0) colorAcum.b =0;
+
+
+	if(colorAcum.r>1) colorAcum.r =1;
+    if(colorAcum.g>1) colorAcum.g =1;
+    if(colorAcum.b>1) colorAcum.b =1;
     
     FragColor = colorAcum;   
 }

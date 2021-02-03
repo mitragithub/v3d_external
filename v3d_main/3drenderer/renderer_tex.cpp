@@ -15,9 +15,9 @@ You will ***have to agree*** the following terms, *before* downloading/using/run
 
 2. You agree to appropriately cite this work in your related studies and publications.
 
-Peng, H., Ruan, Z., Long, F., Simpson, J.H., and Myers, E.W. (2010) “V3D enables real-time 3D visualization and quantitative analysis of large-scale biological image data sets,” Nature Biotechnology, Vol. 28, No. 4, pp. 348-353, DOI: 10.1038/nbt.1612. ( http://penglab.janelia.org/papersall/docpdf/2010_NBT_V3D.pdf )
+Peng, H., Ruan, Z., Long, F., Simpson, J.H., and Myers, E.W. (2010) “V3D enables real-time 3D visualization and quantitative analysis of large-scale biological image data sets, Nature Biotechnology, Vol. 28, No. 4, pp. 348-353, DOI: 10.1038/nbt.1612. ( http://penglab.janelia.org/papersall/docpdf/2010_NBT_V3D.pdf )
 
-Peng, H, Ruan, Z., Atasoy, D., and Sternson, S. (2010) “Automatic reconstruction of 3D neuron structures using a graph-augmented deformable model,” Bioinformatics, Vol. 26, pp. i38-i46, 2010. ( http://penglab.janelia.org/papersall/docpdf/2010_Bioinfo_GD_ISMB2010.pdf )
+Peng, H, Ruan, Z., Atasoy, D., and Sternson, S. (2010) “Automatic reconstruction of 3D neuron structures using a graph-augmented deformable model, Bioinformatics, Vol. 26, pp. i38-i46, 2010. ( http://penglab.janelia.org/papersall/docpdf/2010_Bioinfo_GD_ISMB2010.pdf )
 
 3. This software is provided by the copyright holders (Hanchuan Peng), Howard Hughes Medical Institute, Janelia Farm Research Campus, and contributors "as is" and any express or implied warranties, including, but not limited to, any implied warranties of merchantability, non-infringement, or fitness for a particular purpose are disclaimed. In no event shall the copyright owner, Howard Hughes Medical Institute, Janelia Farm Research Campus, or contributors be liable for any direct, indirect, incidental, special, exemplary, or consequential damages (including, but not limited to, procurement of substitute goods or services; loss of use, data, or profits; reasonable royalties; or business interruption) however caused and on any theory of liability, whether in contract, strict liability, or tort (including negligence or otherwise) arising in any way out of the use of this software, even if advised of the possibility of such damage.
 
@@ -43,13 +43,15 @@ Peng, H, Ruan, Z., Atasoy, D., and Sternson, S. (2010) “Automatic reconstructi
 
 //#include "../v3d/v3d_compile_constraints.h"
 
+#include "GLee2glew.h" ////2020-2-10
+
 #include "renderer_gl1.h"
 #include "v3dr_glwidget.h"
 
 #include "../terafly/src/control/CSettings.h"
 #include "../terafly/src/control/CImport.h"
 #include "../terafly/src/control/CViewer.h"
-#include "CustomDefine.h"
+#include "../terafly/src/presentation/PMain.h"
 
 #define SIM_DIM1 765	//X
 #define SIM_DIM2 567	//Y
@@ -99,9 +101,9 @@ Renderer_gl1::Renderer_gl1(void* widget)
 	this->isTera = false; // added by MK, 2018 May, for arranging segments before entering Rnderer_gla::loopCheck
 	this->isLoadFromFile = false;
 	this->pressedShowSubTree = false;
-	this->fragmentTrace = false;
-	this->UIinstance = false;
 	this->zThick = 1;
+	this->FragTraceMarkerDetector3Dviewer = false;
+	this->NAeditingMode = false;
 
 	qDebug("  Renderer_gl1::Renderer_gl1");
 	init_members();
@@ -634,16 +636,20 @@ void Renderer_gl1::paint()
         glPushMatrix(); //============================================== {
 
         drawVaa3DInfo(16);
-        drawEditInfo();
+        drawEditInfo(); 
+
+#ifdef _NEURON_ASSEMBLER_
+		if (this->editinput != 97)
+		{
+			if (terafly::PMain::isInstantiated())
+				terafly::CViewer::getCurrent()->editingMode = "none";
+		}
+#endif
 
 		//drawSegInfo();
 
         glPopMatrix(); //========================================================= }
     }
-
-
-
-
 
 	return;
 }
@@ -1404,7 +1410,7 @@ void Renderer_gl1::setupStackTexture(bool bfirst)
 		if (bfirst)
 		{
 			setTexParam3D();
-			glTexImage3D(GL_TEXTURE_3D, // target
+			glTexImage3DEXT(GL_TEXTURE_3D, // target
 				0, // level
 				texture_format, // texture format
 				fillX, // width
@@ -1418,7 +1424,7 @@ void Renderer_gl1::setupStackTexture(bool bfirst)
 		}
 		///else  // compressed texture cannot using TexSubImage2D but TexSubImage3D !!!
 		{
-			glTexSubImage3D(GL_TEXTURE_3D, // target
+			glTexSubImage3DEXT(GL_TEXTURE_3D, // target
 				0, // level
 				0,0,0,  // offset
 				realX, // sub width

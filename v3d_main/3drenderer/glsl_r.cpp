@@ -38,8 +38,10 @@ Last update: 2006/11/12 (Geometry Shader Support)
 // minor modified glsl.cpp for using GLee & pure GL 2.0, and turn off log display when no error occur.
 // by RZC 2008-11-23
 
+#include "GLee2glew.h" //Put here Because GL extension loading lib cannot work with the Angle based build of Qt5.
 
 #include "glsl_r.h"
+
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -47,6 +49,7 @@ Last update: 2006/11/12 (Geometry Shader Support)
 #include <fstream>
 #include <algorithm>
 #include <math.h>
+#include <string.h>
 
 using namespace std;
 using namespace cwc;
@@ -126,7 +129,7 @@ inline int CheckGLError(const char *file, int line)
 	}
 	return glErr;
 }
-#define CHECK_GL_ERROR() cwc::CheckGLError(__FILE__, __LINE__)
+#define CHECK_GL_ERROR()  cwc::CheckGLError(__FILE__, __LINE__)
 
 
 //-----------------------------------------------------------------------------
@@ -1361,13 +1364,13 @@ glShaderObject::~glShaderObject()
 }
 
 //-----------------------------------------------------------------------------
-unsigned V3DLONG getFileLength(ifstream& file)
+unsigned long getFileLength(ifstream& file)
 {
     if(!file.good()) return 0;
 
-    unsigned V3DLONG pos=file.tellg();
+    unsigned long pos=file.tellg();
     file.seekg(0,ios::end);
-    unsigned V3DLONG len = file.tellg();
+    unsigned long len = file.tellg();
     file.seekg(ios::beg);
 
     return len;
@@ -1381,7 +1384,7 @@ int glShaderObject::load(char* filename)
 	file.open(filename, ios::in);
    if(!file) return -1;
 
-   unsigned V3DLONG len = getFileLength(file);
+   unsigned long len = getFileLength(file);
 
    if (len==0) return -2;   // "Empty File"
 

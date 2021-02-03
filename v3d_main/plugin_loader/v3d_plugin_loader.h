@@ -74,7 +74,6 @@ public slots:
 	void aboutPlugins();
     void runPlugin();
 	void runPlugin(QPluginLoader *loader, const QString & menuString); //by PHC, 101008
-
     void runRecentPlugin(); //added by Zhi Z, 20140721
     void clear_recentPlugins();
 
@@ -83,7 +82,6 @@ protected:
 	bool runPluginInterface(QObject* plugin, const QString& command);
 	bool runPluginInterface2(QObject* plugin, const QString& command);
 	bool runPluginInterface2_1(QObject* plugin, const QString& command);
-
 	void clear();
 	void loadPlugins(); //load only once
 	void addToMenu(QMenu *menu, QObject *plugin, const QStringList &texts, const char *member);
@@ -207,6 +205,14 @@ public:
     virtual void setHideDisplayControlButton(V3dR_MainWindow *w);
     //virtual void setResizeEvent(V3dR_MainWindow *w, int x, int y);
 
+#ifdef _NEURON_ASSEMBLER_
+	virtual int getSurfaceType(V3dR_MainWindow* w);
+	virtual void set3DViewerMarkerDetectorStatus(bool on_off, V3dR_MainWindow* w);
+	virtual QList<ImageMarker> send3DviewerMarkerList(V3dR_MainWindow* w);
+	virtual QList<CellAPO> send3DviewerApoList(V3dR_MainWindow* w);
+	virtual void refreshSelectedMarkers(V3dR_MainWindow* w);
+#endif
+
 #ifdef __ALLOW_VR_FUNCS__
     virtual void openVRWindow(V3dR_MainWindow *w, bool bOnlineMode = false);
     virtual void openVRWindowV2(v3dhandle image_window, bool bOnlineMode = false);
@@ -226,14 +232,6 @@ public:
     virtual void releaseOpenedVolumesTeraFly();
 
     virtual bool setImageTeraFly(size_t x, size_t y, size_t z);
-
-	virtual bool teraflyImgInstance();
-	virtual void redrawEditInfo(int editInputNum);
-	virtual bool checkFragTraceStatus();
-	virtual void changeFragTraceStatus(bool newStatus);
-	virtual void changeUIstatus(bool newStatus);
-	virtual void getParamsFromFragTraceUI(const string& keyName, const float& value);
-	virtual bool getPartialVolumeCoords(int globalCoords[], int localCoords[], int displayingVolDims[]);
 
 	virtual int setSWC_noDecompose(V3dR_MainWindow* window, const char* fileName);
 	virtual bool hideSWC(V3dR_MainWindow* window, int treeIndex);

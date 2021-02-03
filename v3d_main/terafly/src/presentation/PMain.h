@@ -1,4 +1,4 @@
-//------------------------------------------------------------------------------------------------
+﻿//------------------------------------------------------------------------------------------------
 // Copyright (c) 2012  Alessandro Bria and Giulio Iannello (University Campus Bio-Medico of Rome).  
 // All rights reserved.
 //------------------------------------------------------------------------------------------------
@@ -29,6 +29,9 @@
 #ifndef PMAIN_GUI_H
 #define PMAIN_GUI_H
 
+
+#include "renderer_gl2.h"
+
 #include <QtGui>
 #include <v3d_interface.h>
 #include "../control/CPlugin.h"
@@ -42,7 +45,16 @@
 #include "QGLRefSys.h"
 #include "PDialogVirtualPyramid.h"
 #include "PTabVolumeInfo.h"
+#ifdef __ALLOW_VR_FUNCS__
+#include "fileserver.h"
 
+
+
+/*----------------collaborate mdoe-------------------*/
+class ManageSocket;
+class V3dR_Communicator;
+/*---------------------------------------------------*/
+#endif
 class terafly::PMain : public QWidget
 {
     Q_OBJECT
@@ -356,6 +368,19 @@ class terafly::PMain : public QWidget
         bool annotationChanged;
         bool isMagnificationLocked;
 
+        bool cleanOldAutosavedFiles; // e.g. longer than 24 hours
+
+#ifdef _NEURON_ASSEMBLER_
+		/****************** Fragment tracing related *****************/
+		// MK, Sep, 2019
+		bool fragTracePluginInstance;
+		QPluginLoader* FragTracerQPluginPtr;
+		V3d_PluginLoader* FragTracerPluginLoaderPtr;
+		IPMain4NeuronAssembler* NeuronAssemblerPortal;
+		bool xLockStatus, yLockStatus, zLockStatus;
+		int getCViewerID();
+		/*************************************************************/
+#endif
 
     public slots:
 
@@ -571,8 +596,29 @@ class terafly::PMain : public QWidget
         * Carries progress bar informations (progress percentage and remaining minutes).
         **********************************************************************************/
         void sendProgressBarChanged(int val, int minutes, int seconds, const char* message);
-
-
+#ifdef __ALLOW_VR_FUNCS__
+/*----------------collaborate mdoe-------------------*/
+public:
+        ManageSocket * managesocket;
+protected:
+        QMenu* collaborateMenu;
+        QAction* loginAction;
+        QAction* logoutAction;
+        QAction* importAction;
+        QAction* downAction;
+        QAction* loadAction;
+public slots:
+        void login();
+        void logout();
+        void import();
+        void download();
+        void load();
+        void deleteManageSocket();
+public slots:
+        void ColLoadANO(QString ANOfile);
+        //V3dR_Communicator *TeraflyCommunicator;  move to v3dr_glwidget.h
+/*---------------------------------------------------*/
+#endif
 };
 
 #endif // PMAIN_GUI_H

@@ -1,4 +1,10 @@
-# 170623: by RZC. change name of terafly/teramanager.pro to terafly.pro
+# 20170623: by RZC. Change name of terafly/teramanager.pro to terafly.pro
+# 20201112: by RZC. Add 4 new cpp files
+SOURCES += ../terafly/src/terarepo/src/imagemanager/MultiCycleVolume.cpp
+SOURCES += ../terafly/src/terarepo/src/imagemanager/MultiSliceVolume.cpp
+SOURCES += ../terafly/src/terarepo/src/imagemanager/ComposedVolume.cpp
+SOURCES += ../terafly/src/terarepo/src/stitcher/TPAlgoLQP.cpp
+
 
 # enable Vaa3D-TeraFly mode
 DEFINES += _VAA3D_TERAFLY_PLUGIN_MODE
@@ -85,6 +91,7 @@ DEFINES += TERACONVERTER_PATCH
 
 #setup iomanager
 INCLUDEPATH += ../terafly/src/terarepo/src/iomanager
+
 HEADERS += ../terafly/src/terarepo/src/iomanager/iomanager.config.h
 HEADERS += ../terafly/src/terarepo/src/iomanager/ioplugins.h
 HEADERS += ../terafly/src/terarepo/src/iomanager/IOPluginAPI.h
@@ -144,7 +151,6 @@ SOURCES += ../terafly/src/terarepo/src/imagemanager/TimeSeries.cpp
 SOURCES += ../terafly/src/terarepo/src/imagemanager/VirtualFmtMngr.cpp
 SOURCES += ../terafly/src/terarepo/src/imagemanager/VirtualVolume.cpp
 SOURCES += ../terafly/src/terarepo/src/imagemanager/UnstitchedVolume.cpp
-
 
 # set up stitcher
 INCLUDEPATH += ../terafly/src/terarepo/src/stitcher
@@ -259,6 +265,12 @@ HEADERS += ../terafly/src/presentation/PAnoToolBar.h
 HEADERS += ../terafly/src/control/QUndoMarkerCreate.h
 HEADERS += ../terafly/src/control/QUndoMarkerDelete.h
 HEADERS += ../terafly/src/control/QUndoMarkerDeleteROI.h
+
+win32{
+HEADERS += ../terafly/src/presentation/fileserver.h
+SOURCES += ../terafly/src/presentation/fileserver.cpp
+}
+
 SOURCES += ../terafly/src/control/CAnnotations.cpp
 SOURCES += ../terafly/src/control/CConverter.cpp
 SOURCES += ../terafly/src/control/CViewer.cpp

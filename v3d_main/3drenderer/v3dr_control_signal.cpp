@@ -631,6 +631,7 @@ void V3dR_MainWindow::createControlWidgets()
 	//=============================================================================
 	//collaboration 
 	//rotCView = new QCheckBox("Start collaboration mode in 3D view.");
+	//rotCView = new QPushButton("collaborate in VR", controlGroup);
 	//rotCView->setToolTip("You can edit current image in collaboration mode.");
 	//controlLayout->addWidget(rotCView);
 	//VR
@@ -891,7 +892,7 @@ void V3dR_MainWindow::connectSignal()
 		connect(rotVRView, SIGNAL(clicked()), glWidget, SLOT(doimage3DVRView()));
 	}
 	if(rotCView){
-		connect(rotCView, SIGNAL(toggled(bool)), glWidget, SLOT(doclientView(bool)));
+		connect(rotCView, SIGNAL(clicked()), glWidget, SLOT(doimage3DVRView()));
 	}
 #endif
 
@@ -1201,27 +1202,56 @@ void V3dR_MainWindow::setXCutLockIcon(bool b)
 {
 	if (! xcLock)  return;
 	if (b)
+	{
 		xcLock->setIcon(QIcon(":/pic/Lockon.png"));
+#ifdef _NEURON_ASSEMBLER_
+		glWidget->getXlockStatus(true);
+#endif
+	}
 	else
+	{
 		xcLock->setIcon(QIcon(":/pic/Lockoff.png"));
+#ifdef _NEURON_ASSEMBLER_
+		glWidget->getXlockStatus(false);
+#endif
+	}
 }
 void V3dR_MainWindow::setYCutLockIcon(bool b)
 {
 	if (! ycLock)  return;
 	if (b)
+	{
 		ycLock->setIcon(QIcon(":/pic/Lockon.png"));
+#ifdef _NEURON_ASSEMBLER_
+		glWidget->getYlockStatus(true);
+#endif
+	}
 	else
+	{
 		ycLock->setIcon(QIcon(":/pic/Lockoff.png"));
+#ifdef _NEURON_ASSEMBLER_
+		glWidget->getYlockStatus(false);
+#endif
+	}
 }
 void V3dR_MainWindow::setZCutLockIcon(bool b)
 {
 	if (! zcLock)  return;
 	if (b)
+	{
 		zcLock->setIcon(QIcon(":/pic/Lockon.png"));
+#ifdef _NEURON_ASSEMBLER_
+		glWidget->getZlockStatus(true);
+#endif
+	}
 	else
+	{
 		zcLock->setIcon(QIcon(":/pic/Lockoff.png"));
+#ifdef _NEURON_ASSEMBLER_
+		glWidget->getZlockStatus(false);
+#endif
+	}
 }
-
 
 void V3dR_MainWindow::initVolumeTimeRange()
 {

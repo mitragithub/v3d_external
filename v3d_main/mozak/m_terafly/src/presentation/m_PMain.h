@@ -29,6 +29,8 @@
 #ifndef PMAIN_GUI_H
 #define PMAIN_GUI_H
 
+#include "v3dr_common.h"
+
 #include <QtGui>
 #include <v3d_interface.h>
 #include "v3dr_glwidget.h"
@@ -139,6 +141,8 @@ class teramanager::PMain : public QWidget
         QMenu* generateTimeSeries;
         QAction* generateTimeSeriesInterpolation;
         QAction* generateTimeSeriesDataReplication;
+
+
 
         // "Help" menu widgets
         QMenu* helpMenu;                //"Help" menu
@@ -506,6 +510,8 @@ class teramanager::PMain : public QWidget
         void showDialogGenerateTimeSeriesInterpolation();
         void showDialogGenerateTimeSeriesReplication();
         void showAnoOctree();
+
+
 
 
     signals:

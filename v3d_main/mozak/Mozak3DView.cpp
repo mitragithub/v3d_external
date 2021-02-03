@@ -16,7 +16,7 @@ int Mozak3DView::contrastValue = 0;
 Mozak3DView::Mozak3DView(V3DPluginCallback2 *_V3D_env, int _resIndex, itm::uint8 *_imgData, int _volV0, int _volV1,
 	int _volH0, int _volH1, int _volD0, int _volD1, int _volT0, int _volT1, int _nchannels, itm::CViewer *_prev, int _slidingViewerBlockID)
 		: teramanager::CViewer(_V3D_env, _resIndex, _imgData, _volV0, _volV1,
-			_volH0, _volH1, _volD0, _volD1, _volT0, _volT1, _nchannels, _prev, _slidingViewerBlockID)
+        _volH0, _volH1, _volD0, _volD1, _volT0, _volT1, _nchannels, _prev, _slidingViewerBlockID), mHotKeysEnabled(true), mHotKeysAfterMozakEnabled(true)
 {
 	//170729 RZC: to fix crash of calling updateUndoLabel() in appendHistory() when starting
 	currUndoLabel = 0; buttonUndo = buttonRedo = 0;
@@ -492,8 +492,62 @@ bool Mozak3DView::eventFilter(QObject *object, QEvent *event)
 
 		// Implement custom key events
         int keyPressed = key_evt->key();
-		if (key_evt->isAutoRepeat()&&keyPressed!=Qt::Key_A&&keyPressed!=Qt::Key_P) return true; // ignore holding down of key unless it's being used to simply click (or unclick) a QAbstractButton
 
+        stringstream msg;
+        //msg << "Key pressed: " << std::hex << "0x" << keyPressed;
+        //v3d_msg(msg.str().c_str(), 0);
+
+        if (keyPressed == Qt::Key_Semicolon)
+        {
+            mHotKeysEnabled = !mHotKeysEnabled;
+
+            if (mHotKeysEnabled)
+            {
+                msg << "Mozak hotkeys are enabled";  
+            }
+            else
+            {
+                msg << "Mozak hotkeys are disabled";
+            }
+
+            v3d_msg(msg.str().c_str(), 0);
+            return true;
+        }
+
+        if (keyPressed == Qt::Key_Colon)
+        {
+            mHotKeysAfterMozakEnabled = !mHotKeysAfterMozakEnabled;      //Ctrl : toggles hotkeys on/off for units "after" Mozak. Default: true           
+            if (mHotKeysAfterMozakEnabled)
+            {
+                msg << "Non-Mozak hotkeys are enabled";
+            }
+            else
+            {
+                msg << "Non-Mozak hotkeys are disabled";
+            }
+
+            v3d_msg(msg.str().c_str(), 0);
+            return true;
+        }
+
+
+        if (mHotKeysEnabled == false)
+        {
+            //msg << "Mozak hotkeys are disabled. Press ';' to enable.";
+            //v3d_msg(msg.str().c_str(), 0);
+            
+            //Allow further processing by returning false
+            return mHotKeysAfterMozakEnabled ? false : true;            
+        }
+
+        key_evt = (QKeyEvent*)event;
+
+		if (key_evt->isAutoRepeat()  
+            && keyPressed != Qt::Key_A            
+            && keyPressed != Qt::Key_P)
+        {
+            return true; // ignore holding down of key unless it's being used to simply click (or unclick) a QAbstractButton
+        }
 
 		Renderer::SelectMode newMode;
         bool bAddCurve = true;
@@ -696,14 +750,36 @@ bool Mozak3DView::eventFilter(QObject *object, QEvent *event)
                 changeMode(Renderer::defaultSelectMode, true, true);
 				break;
 		}
+
+        if (mHotKeysAfterMozakEnabled == false)
+        {
+            //Disable any further processing
+            return true;
+        }
 	}
 	else if (event->type() == (QEvent::Type)7)  //2017-6-9 RZC: deal with the #define KeyRelease in X.h of XWindow
 							//QEvent::KeyRelease) // intercept keypress events
 	{
 		key_evt = (QKeyEvent*)event;
-		if (key_evt->isAutoRepeat()) return true; // ignore holding down of key
+		if (key_evt->isAutoRepeat()) 
+        {
+            return true; // ignore holding down of key
+        }
+
+        stringstream msg;
+        if (mHotKeysEnabled == false)
+        {
+            //msg << "Mozak hotkeys are disabled. Press ';' to enable.";
+            //v3d_msg(msg.str().c_str(), 0);
+
+            //Allow further processing by returning false
+            return mHotKeysAfterMozakEnabled ? false : true;
+        }
 
 		int keyReleased = key_evt->key();
+        //msg << "Key released:" << hex << "0x" << keyReleased;
+        //v3d_msg(msg.str().c_str(), 0);
+
 		switch (keyReleased)
 		{
 		case Qt::Key_G:
@@ -729,6 +805,12 @@ bool Mozak3DView::eventFilter(QObject *object, QEvent *event)
 		default:
 			break;
 		}
+
+        if (mHotKeysAfterMozakEnabled == false)
+        {
+            //Disable any further processing
+            return true;
+        }
 	}
 	else
 	{
@@ -1812,11 +1894,11 @@ void Mozak3DView::receiveData(
     {
         try
         {
-            itm::uint32 img_dims[5]       = {std::max(0,nextImgVolH1-nextImgVolH0), std::max(0,nextImgVolV1-nextImgVolV0), std::max(0,nextImgVolD1-nextImgVolD0), nchannels, std::max(0,nextImgVolT1-nextImgVolT0+1)};
-			itm::uint32 img_offset[5]     = {std::max(0,data_s[0]-nextImgVolH0),    std::max(0,data_s[1]-nextImgVolV0),    std::max(0,data_s[2]-nextImgVolD0),    0,         std::max(0,data_s[4]-nextImgVolT0)     };
-            itm::uint32 new_img_dims[5]   = {data_c[0],                             data_c[1],                             data_c[2],                             data_c[3], data_c[4]                              };
-            itm::uint32 new_img_offset[5] = {0,                                     0,                                     0,                                     0,         0                                      };
-            itm::uint32 new_img_count[5]  = {data_c[0],                             data_c[1],                             data_c[2],                             data_c[3], data_c[4]                              };
+            itm::uint32 img_dims[5]       = {uint32(std::max(0,nextImgVolH1-nextImgVolH0)), uint32(std::max(0,nextImgVolV1-nextImgVolV0)), uint32(std::max(0,nextImgVolD1-nextImgVolD0)), uint32(nchannels), uint32(std::max(0,nextImgVolT1-nextImgVolT0+1))};
+            itm::uint32 img_offset[5]     = {uint32(std::max(0,data_s[0]-nextImgVolH0)),    uint32(std::max(0,data_s[1]-nextImgVolV0)),    uint32(std::max(0,data_s[2]-nextImgVolD0)),    uint32(0),         uint32(std::max(0,data_s[4]-nextImgVolT0))     };
+            itm::uint32 new_img_dims[5]   = {uint32(data_c[0]),                             uint32(data_c[1]),                             uint32(data_c[2]),                             uint32(data_c[3]), uint32(data_c[4])                              };
+            itm::uint32 new_img_offset[5] = {uint32(0),                                     uint32(0),                                     uint32(0),                                     uint32(0),         uint32(0)                                      };
+            itm::uint32 new_img_count[5]  = {uint32(data_c[0]),                             uint32(data_c[1]),                             uint32(data_c[2]),                             uint32(data_c[3]), uint32(data_c[4])                              };
 			itm::CImageUtils::copyVOI(data, new_img_dims, new_img_offset, new_img_count,
                     nextImg->getRawData(), img_dims, img_offset);
             
@@ -2021,8 +2103,12 @@ void Mozak3DView::loadNewResolutionData(	int _resIndex,
 	// updating reference system
 	if(!moz->isPRactive())
 		moz->refSys->setDims(volH1-volH0+1, volV1-volV0+1, volD1-volD0+1);
+
+#ifndef USE_Qt5  //by PHC 20200201, tentative comment this due to the non-found updateGL() function in the respective class in Qt5
 	this->view3DWidget->updateGL();     // if omitted, Vaa3D_rotationchanged somehow resets rotation to 0,0,0
-	Vaa3D_rotationchanged(0);
+#endif
+
+    Vaa3D_rotationchanged(0);
 
 	// update curve aspect
 	moz->curveAspectChanged();

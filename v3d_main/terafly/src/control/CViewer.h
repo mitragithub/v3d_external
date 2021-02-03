@@ -1,4 +1,4 @@
-//------------------------------------------------------------------------------------------------
+﻿//------------------------------------------------------------------------------------------------
 // Copyright (c) 2012  Alessandro Bria and Giulio Iannello (University Campus Bio-Medico of Rome).
 // All rights reserved.
 //------------------------------------------------------------------------------------------------
@@ -35,16 +35,25 @@
 #ifndef CEXPLORERWINDOW_H
 #define CEXPLORERWINDOW_H
 
+#include "v3dr_common.h"
+
 #include "CPlugin.h"
 #include "v3dr_mainwindow.h"
-#include "renderer_gl2.h"
 #include "CImport.h"
 #include "v3d_imaging_para.h"
 #include "V3Dsubclasses.h"
 
-class terafly::CViewer : public QWidget
+#ifdef _NEURON_ASSEMBLER_
+class terafly::CViewer : public QWidget, public INeuronAssembler
 {
     Q_OBJECT
+	Q_INTERFACES(INeuronAssembler) // INeuronAssembler is NOT a Q_OBJECT, hence Q_INTERFACES macro is needed.
+
+#else
+class terafly::CViewer : public QWidget
+{
+	Q_OBJECT
+#endif
 
     private:
 
@@ -176,6 +185,61 @@ class terafly::CViewer : public QWidget
 		inline int getXDim() { return (this->volH1 - this->volH0); }
 		inline int getYDim() { return (this->volV1 - this->volV0); }
 		inline int getZDim() { return (this->volD1 - this->volD0); }
+
+#ifdef _NEURON_ASSEMBLER_
+		/* ====================================================================================================
+		 * In order to simplify the communication between Neuron Assembler plugin and terafly environment,
+		 * I make INeuronAsembler 1 of CViewer's bases (with conditional preprocessor macro '_NEURON_ASSEMBLER_').
+		 * This preprocessor block lists functionalities that can be accessed through this interface.
+		 * Note, this is a bypass of [V3DPluginCallback2 -> V3d_PluginLoader -> CPlugin -> CViewer] route.
+		 * Through this interface, the plugin directly talks to CViewer through [INeuronAssembler].
+		 *                                                                                   -- MK, Dec, 2019
+		 * ==================================================================================================== */
+		virtual bool teraflyImgInstance();
+
+		virtual void sendCastNAUI2PMain(IPMain4NeuronAssembler* NAportal);
+		//virtual void forceCViewerPortalUpdate();
+		virtual bool checkFragTraceStatus();
+		virtual void changeFragTraceStatus(bool newStatus);
+		virtual int getViewerID() { return this->ID; }
+		virtual void printOutCViewerAddress() { cout << " => Current CViewer address: " << CViewer::getCurrent() << endl; }
+
+		virtual string getCviewerWinTitle() { return CViewer::getCurrent()->title; }
+		virtual void printoutWinTitle() { cout << CViewer::getCurrent()->title << endl; }
+		virtual int getTeraflyTotalResLevel() { return CImport::instance()->getResolutions(); }
+		virtual int getTeraflyResLevel() { return CViewer::getCurrent()->getResIndex(); }
+		virtual int getZoomingFactor() { return CViewer::getCurrent()->getGLWidget()->_zoom; }
+		virtual bool getXlockStatus();
+		virtual bool getYlockStatus();
+		virtual bool getZlockStatus();
+		virtual bool getPartialVolumeCoords(int globalCoords[], int localCoords[], int displayingVolDims[]);
+
+		QList<ImageMarker> selectedMarkerList;
+		QList<ImageMarker> selectedLocalMarkerList;
+		QList<ImageMarker> up2dateMarkerList;
+		virtual void refreshSelectedMarkers();
+		virtual void pushMarkersfromTester(const set<vector<float>>& markerCoords, RGBA8 color);
+
+		string editingMode;
+		int mouseX, mouseY;
+		int eraserSize, connectorSize;
+		map<int, vector<NeuronSWC>> seg2includedNodeMap;
+		set<int> deletedSegsIDs;
+		virtual vector<V_NeuronSWC>* getDisplayingSegs();
+		virtual void updateDisplayingSegs();
+		virtual void editingModeInit() { CViewer::getCurrent()->editingMode = "none"; }
+		virtual void setEraserSize(int newEraserSize) { CViewer::getCurrent()->eraserSize = newEraserSize; }
+		virtual int getEraserSize() { return CViewer::getCurrent()->eraserSize; }
+		virtual void setConnectorSize(int newConnectorSize) { CViewer::getCurrent()->connectorSize = newConnectorSize; }
+		virtual int getConnectorSize() { return CViewer::getCurrent()->connectorSize; }
+		virtual void segEditing_setCursor(string action);		
+		virtual int getNearestSegEndClusterCentroid(const boost::container::flat_map<int, vector<float>>& segEndClusterCentroidMap);
+		virtual void convertLocalCoord2windowCoord(const float localCoord[], float windowCoord[]);
+		virtual void convertWindowCoord2likelyLocalCoord(const int mouseX, const int mouseY, float putativeCoord[]);
+
+		virtual void getParamsFromFragTraceUI(const string& keyName, const float& value);
+		
+#endif
 
         /**********************************************************************************
         * Restores the current viewer from the given (neighboring) source viewer.
